@@ -1,0 +1,1 @@
+Socket.io based thermostat web app to interface with the [trackr](https://github.com/juancgarcia/trackr) multi-node temperature logger.
