@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+  </head>
+  <body>
+    <div><h1>ThermoSTAT</h1></div>
+    <div id="date"></div>
+
+    <h1>Temperature<div id="temperature"></div></h1>
+
+    <h3>Fan Status<div id="fan"></div></h3>
+    <h3>Compressor Status<div id="compressor"></div></h3>
+    <div id=""></div>
+
+    <!-- <div id=""></div> -->
+    <div id="increase"><h3>Temp Up</h3></div>
+    <div id="decrease"><h3>Temp Down</h3></div>
+
+    <h2>Nodes</h2>
+    <div id="nodes"></div>
+    <script>
+        var socket = io.connect();
+        socket.on('message', function(data){
+            console.log(data.message);
+        });
+        socket.on('date', function(data){
+            $('#date').text(data.date);
+        });
+        socket.on('nodes.latest', function(data){
+            if(data.err)
+                $('#nodes').text(data.err);
+            else
+                $('#nodes').text(JSON.stringify(data.nodes));
+        });
+        // socket.on('temperature', function(data){
+        socket.on('climate.temperature', function(data){
+            // $('#temperature').text(data.value);
+            if(!data.err) $('#temperature').text(data.temperature.value + " " + data.temperature.unit);
+        });
+        $('#increase').click(function(){
+            socket.emit('climate.temperature', {value: 1});
+        });
+        $('#decrease').click(function(){
+            socket.emit('climate.temperature', {value: -1});
+        });
+        socket.on('fan', function(data){
+            $('#fan').text(data.status);
+        });
+        socket.on('compressor', function(data){
+            $('#compressor').text(data.status);
+        });
+    </script>
+  </body>
+</html>
