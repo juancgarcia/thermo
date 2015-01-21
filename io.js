@@ -165,7 +165,7 @@ module.exports = function(api, next){
                         location: null,
                         type: 'temperature',
                         value: 75,
-                        unit: 'farenheit'
+                        unit: 'fahrenheit'
                     },
                     climate = new models.climateRequest.model(latest);
                     climate._id = null;
