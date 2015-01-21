@@ -65,7 +65,28 @@ module.exports = function(api, next){
         });
 
     };
-    var getClimate = function(next){
+    var getTemperatureAverage = function(next){
+        models.temperature.model.aggregate()
+            // .sort({"$timestamp": 1})
+            .group({
+                "_id" : "$deviceId" ,
+                "timestamp" : { "$last" : "$timestamp"} ,
+                "value" : { "$last" : "$value"} ,
+                "unit" : { "$last" : "$unit"}
+            })
+            .exec(function(err, values){
+                // api.log("node values",values);
+                if(err)
+                    return next(err, null);
+                var avgtemp = values.map(function(obj,index,array){ return obj.value; })
+                    .reduce(function(prev, curr, index, arr){ return prev += curr;}, 0);
+                avgtemp = avgtemp/values.length;
+                // api.log("avgtemp", avgtemp);
+                // api.log("requestTemperature", requestTemperature)
+                next(err, {value: avgtemp, unit: values[0].unit});
+            });
+    };
+    var getClimateRequest = function(next){
 
         models.climateRequest.model.find()
             .sort({'timestamp': -1})
@@ -98,10 +119,16 @@ module.exports = function(api, next){
         setInterval(function(){
             socket.emit('date', {'date': new Date()});
             //
-            getClimate(function(err, temperature){
-                // if(err) console.log('getClimate: error '+ err);
-                // console.log('getClimate: ', err, temperature);
-                return socket.emit('climate.temperature', {
+            getTemperatureAverage(function(err, temperature){
+                return socket.emit('climate.temperatureAvg', {
+                    'temperature': temperature || null,
+                    'err': err || false
+                })
+            });
+            getClimateRequest(function(err, temperature){
+                // if(err) console.log('getClimateRequest: error '+ err);
+                // console.log('getClimateRequest: ', err, temperature);
+                return socket.emit('climate.temperatureRequest', {
                     'temperature': temperature || null,
                     'err': err || false
                 });
@@ -109,6 +136,31 @@ module.exports = function(api, next){
         }, 1000);
 
         var periodic = function(){
+            // check temperature
+            getClimateRequest(function(err, requestTemperature){
+                if(err || !requestTemperature){
+                    socket.emit('thermo.fan', {"status": false});
+                    socket.emit('thermo.compressor', {"status": false});
+                    socket.emit('thermo.notice', {"message": "no requestTemperature"});
+                }
+                getTemperatureAverage(function(err, temp){
+                    if(err || !temp){
+                        socket.emit('thermo.fan', {"status": false});
+                        socket.emit('thermo.compressor', {"status": false});
+                        socket.emit('thermo.notice', {"message": "no zone temperatures"});
+                        return;
+                    }
+                    // if climate request is cool and temperature <= climate request temp
+                    if(temp.value > requestTemperature.value){
+                        // fan + compressor => on
+                        socket.emit('thermo.fan', {'status': true});
+                        socket.emit('thermo.compressor', {'status': true});
+                    }else{
+                        socket.emit('thermo.fan', {"status": false});
+                        socket.emit('thermo.compressor', {"status": false});
+                    }
+                });
+            });
         };
         periodic();
         // every 5 mins

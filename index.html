@@ -7,7 +7,9 @@
     <div><h1>ThermoSTAT</h1></div>
     <div id="date"></div>
 
-    <h1>Temperature<div id="temperature"></div></h1>
+    <h1>Request Temperature<div id="temperatureRequest"></div></h1>
+
+    <h1>Ambient Temperature<div id="temperatureAvg"></div></h1>
 
     <h3>Fan Status<div id="fan"></div></h3>
     <h3>Compressor Status<div id="compressor"></div></h3>
@@ -21,6 +23,9 @@
     <div id="nodes"></div>
     <script>
         var socket = io.connect();
+        socket.on('thermo.notice', function(data){
+            console.log(data.message);
+        });
         socket.on('message', function(data){
             console.log(data.message);
         });
@@ -34,9 +39,13 @@
                 $('#nodes').text(JSON.stringify(data.nodes));
         });
         // socket.on('temperature', function(data){
-        socket.on('climate.temperature', function(data){
+        socket.on('climate.temperatureRequest', function(data){
             // $('#temperature').text(data.value);
-            if(!data.err) $('#temperature').text(data.temperature.value + " " + data.temperature.unit);
+            if(!data.err) $('#temperatureRequest').text(data.temperature.value + " " + data.temperature.unit);
+        });
+        socket.on('climate.temperatureAvg', function(data){
+            // $('#temperature').text(data.value);
+            if(!data.err) $('#temperatureAvg').text(data.temperature.value + " " + data.temperature.unit);
         });
         $('#increase').click(function(){
             socket.emit('climate.temperature', {value: 1});
@@ -44,10 +53,10 @@
         $('#decrease').click(function(){
             socket.emit('climate.temperature', {value: -1});
         });
-        socket.on('fan', function(data){
+        socket.on('thermo.fan', function(data){
             $('#fan').text(data.status);
         });
-        socket.on('compressor', function(data){
+        socket.on('thermo.compressor', function(data){
             $('#compressor').text(data.status);
         });
     </script>
