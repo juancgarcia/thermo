@@ -12,7 +12,7 @@ module.exports = function(mongoose){
         deviceType: String,
         deviceId: String,
         value: Number,
-        unit: String, // 'celius'|'farenheit'
+        unit: String, // 'celius'|'fahrenheit'
         timestamp: Number
     });
     

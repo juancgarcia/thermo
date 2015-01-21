@@ -12,7 +12,7 @@ module.exports = function(mongoose){
         location: String, // null(average of zones)|a_zone_name
         type: String, // temperature|...?
         value: Number,
-        unit: String, // 'celius'|'farenheit'|...?
+        unit: String, // 'celius'|'fahrenheit'|...?
         timestamp: Number
     });
     

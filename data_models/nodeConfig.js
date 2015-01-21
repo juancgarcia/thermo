@@ -14,7 +14,7 @@ module.exports = function(mongoose){
         deviceType: String,
         deviceId: Number,
         refreshSeconds: Number,
-        unit: String // 'celius'|'farenheit'|'auto' ('auto' .: do not change)
+        unit: String // 'celius'|'fahrenheit'|'auto' ('auto' .: do not change)
     });
     
     nodeConfig.schema.methods.print = function (next) {
